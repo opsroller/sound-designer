@@ -7,7 +7,7 @@
 | File | [`workflows/adaptive-music.js`](../../workflows/adaptive-music.js) |
 | Command | `/sound-designer:adaptive-music` |
 | Arguments | `piece` (required): cue name of the piece. `states` (required): array of state names. `brief` (required): mood, setting, what the music tells the player. |
-| Returns | `status` (`done`, `done-unverified`, `incomplete`, `blocked`), `piece`, `parts`, `notes`, `docs`, `docs_problems`; when blocked: `stage` and `problems` or `open`. |
+| Returns | `status` (`done`, `done-unverified`, `incomplete`, `blocked`), `piece`, `parts`, `notes`, `docs`, `docs_problems`; on `done` and `done-unverified` also `handoff` and `next`; when blocked: `stage` and `problems` or `open`. |
 
 ## Phases
 
@@ -17,16 +17,27 @@
 | Compose | One agent per part (segment, layer or stinger); returns provenance lines and loop points. | music-and-adaptive-scoring, sound-provenance |
 | Implement | One agent wires states and transitions and edits contract and log once. | audio-implementation |
 | Check | Reviewer forces every transition and layer combination; up to two fix rounds. | music-and-adaptive-scoring, mixing-and-loudness |
-| Docs | Reference and explanation for the music system; checks one kind per page. | (Diataxis guide) |
+| Docs | Reference and explanation for the music system; returns `pages` and `undocumented`; checks one kind per page. | (Diataxis guide) |
+| Handoff | Commits anything left on a feature branch, pushes, runs the project checks on the pushed head. Never opens or merges a PR. Skipped when the result is `incomplete`. | (engineering-practices git-workflow) |
 
 ## Rules
 
 - Parallel agents write only to their own output folder; shared files (cue contract, provenance log, credits) are edited by one agent in one edit.
 - A failed agent result is never treated as success: missing plans stop the run; failed reviewers mark the result unverified.
 - Blockers still open after two fix rounds return `status: "blocked"` with the open items; nothing further is committed.
-- `incomplete` is returned when the docs agent failed or the docs check found problems.
+- `incomplete` is returned when the docs agent failed or the docs check found problems; no handoff is made.
+- `status: "blocked"` with `stage: "handoff"` is returned when the handoff step returns no branch or the project checks fail on the pushed head; `open` names the problem.
 - Results from parallel agents are matched to their inputs by position, not by the name an agent echoes back.
 - Usage text is returned when required arguments are missing.
+
+## Handoff
+
+`handoff` is the object engineering-practices
+[deliver-package](https://github.com/opsroller/engineering-practices/blob/main/docs/reference/workflow-deliver-package.md)
+takes as `prior`, so pass the whole result and the piece ships without
+being made again: `from` (`sound-designer:adaptive-music`), `branch`, `pr`,
+`head_sha`, `tests_pass`, `docs` (page paths), `undocumented`, `notes`.
+With no work package, land the branch with land-pr instead; `next` names both.
 
 ## Run modes
 
@@ -36,6 +47,6 @@ Run modes v2. Besides its own args, the workflow takes the optional `run` arg de
 and `run.from` with `run.results` resumes a stopped run. Without `run`, the workflow and its outputs are as above.
 See [how to run a workflow inline](https://github.com/opsroller/engineering-practices/blob/main/docs/how-to/how-to-run-a-workflow-inline.md).
 
-Step labels, for `run.only` and `run.results`: `plan`, `part:<name>` (one per part), `implement`, `review`, `fix-<round>`, `re-review-<round>`, `docs-do`, `docs-check`.
+Step labels, for `run.only` and `run.results`: `plan`, `part:<name>` (one per part), `implement`, `review`, `fix-<round>`, `re-review-<round>`, `docs-do`, `docs-check`, `handoff`.
 
 Independent steps: `review`, `re-review-<round>`, `docs-check`. They review work this run produced, so in inline mode send each to a reviewer with no part in the work and name them in `run.reviewers`; a step you answer yourself is reported in `self_reviewed`.

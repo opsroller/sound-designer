@@ -21,7 +21,10 @@ This guide shows you how to create several cues at once with the
    ```
 
 4. Read the result:
-   - `status: "done"`: sounds, shared files and docs are committed.
+   - `status: "done"`: sounds, shared files and docs are committed and
+     pushed on a feature branch, and the result carries a `handoff`.
+   - `status: "blocked"` with `stage: "handoff"`: the push or the project
+     checks failed on the branch named in `open`; fix it and run again.
    - `status: "blocked"` with `stage: "plan"`: fix the listed problems
      (unclear purpose, name clashes) and run again.
    - `status: "blocked"` with `stage: "check"`: the open blockers are
@@ -31,7 +34,12 @@ This guide shows you how to create several cues at once with the
      failed cues or fix the docs.
    - `status: "done-unverified"`: a reviewer agent failed; listen to the
      cues yourself or run [How to review the mix before release](how-to-review-the-mix-before-release.md).
-5. If a cue name is already called by code under a different name, agree
+5. Ship it without making the sounds again. For a work package, pass the
+   whole result as `prior`:
+   `/engineering-practices:deliver-package { wp: "<the package>", prior: <the result> }`.
+   With no work package, land the branch:
+   `/engineering-practices:land-pr { branch: "<handoff.branch>" }`.
+6. If a cue name is already called by code under a different name, agree
    the rename with the gameplay-programmer before running.
 
 For arguments, phases and outputs, see the

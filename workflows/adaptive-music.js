@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 export const meta = {
   name: 'adaptive-music',
-  description: 'Design, compose and implement one adaptive music piece: choose the structure (segments, layers, stingers), compose each part in parallel into separate files, implement states and transitions in one edit, audition every transition and layer combination, then document. args: { piece: "mus_explore", states: ["calm", "tension", "intense"], brief: "mood, setting, what the music tells the player" }',
+  description: 'Design, compose and implement one adaptive music piece: choose the structure (segments, layers, stingers), compose each part in parallel into separate files, implement states and transitions in one edit, audition every transition and layer combination, document, then push it as a handoff for engineering-practices deliver-package or land-pr. args: { piece: "mus_explore", states: ["calm", "tension", "intense"], brief: "mood, setting, what the music tells the player" }',
   phases: [
     { title: 'Plan', detail: 'structure, parts, transition table, doc kinds' },
     { title: 'Compose', detail: 'one agent per part (segment, layer or stinger), separate files' },
     { title: 'Implement', detail: 'one agent wires states, transitions, contract and provenance' },
     { title: 'Check', detail: 'audition all transitions and combinations; fix loop' },
     { title: 'Docs', detail: 'reference and explanation for the music system; check one kind per page' },
+    { title: 'Handoff', detail: 'commit and push the piece, run the project checks, return a handoff for engineering-practices deliver-package or land-pr' },
   ],
 }
 
@@ -193,7 +194,7 @@ if (review && review.blockers && review.blockers.length) return { status: 'block
 phase('Docs')
 const docsDone = await agent(
   `You are the sound-designer documenting adaptive piece "${piece}": structure ${plan.structure}; tempo/meter/key ${plan.tempo_meter_key}; transitions ${JSON.stringify(plan.transitions)}. Planned doc kinds: ${JSON.stringify(plan.doc_kinds)} (typically reference for states, parameters, transition table and loop points; explanation for why this structure).\n${DOCS_FRAGMENT}\nCommit music, sources, shared-file edits and docs together with a Conventional Commit (e.g. "feat(audio): add adaptive exploration music").`,
-  { phase: 'Docs', label: 'docs-do' },
+  { schema: { type: 'object', properties: { pages: { type: 'array', items: { type: 'string' } }, undocumented: { type: 'array', items: { type: 'string' } } }, required: ['pages'] }, phase: 'Docs', label: 'docs-do' },
 )
 const DOCREV = { type: 'object', properties: { problems: { type: 'array', items: { type: 'string' } } }, required: ['problems'] }
 const docsCheck = docsDone ? await agent(
@@ -203,7 +204,7 @@ const docsCheck = docsDone ? await agent(
 
 const docsProblems = docsCheck ? (docsCheck.problems || []) : ['docs check did not run or failed; docs unverified']
 const incomplete = !docsDone || docsProblems.length > 0
-return {
+const result = {
   status: incomplete ? 'incomplete' : (unverified ? 'done-unverified' : 'done'),
   piece,
   parts: done.map(d => d.name),
@@ -211,4 +212,30 @@ return {
   docs: docsDone ? 'updated' : 'docs agent failed; docs not updated',
   docs_problems: docsProblems,
 }
+if (incomplete) return result
+
+// The handoff is what engineering-practices deliver-package takes as
+// prior, so the piece ships without being composed again.
+phase('Handoff')
+const HANDOFF = { type: 'object', properties: { branch: { type: 'string' }, pr: { type: 'string' }, head_sha: { type: 'string' }, tests_pass: { type: 'boolean' }, problem: { type: 'string' } }, required: ['branch', 'tests_pass'] }
+const pages = Array.isArray(docsDone.pages) ? docsDone.pages : []
+const hand = await agent(
+  `Hand off adaptive piece "${piece}" (parts: ${done.map(d => d.name).join(', ')}). If you are on the default branch, cut a Conventional branch (feat/<slug>) from the latest remote default branch; otherwise stay on the current feature branch. Commit everything this run wrote that is not yet committed (the part files and their sources, the states and transitions in the audio system, the cue contract and provenance log edits, and the docs pages ${pages.join(', ') || 'as written'}) as Conventional Commits, and push. Run the project checks that apply (tests, asset or audio validator, docs and link checks the project profile names) on the pushed head. Do not open, mark ready or merge a PR: the engineering-practices workflow named in the result does that. Follow the engineering-practices git-workflow skill. Return the branch, any open PR, the head commit SHA, whether the checks pass on that head, and the problem if not.`,
+  { schema: HANDOFF, phase: 'Handoff', label: 'handoff' },
+)
+if (!hand || !hand.branch) return { status: 'blocked', stage: 'handoff', open: [hand && hand.problem ? hand.problem : 'handoff step returned nothing; the piece may be uncommitted or unpushed'] }
+if (!hand.tests_pass) return { status: 'blocked', stage: 'handoff', open: [`project checks fail on ${hand.branch}${hand.head_sha ? ' at ' + hand.head_sha : ''}: ${hand.problem || 'no details'}`] }
+return Object.assign(result, {
+  handoff: {
+    from: 'sound-designer:adaptive-music',
+    branch: hand.branch,
+    pr: hand.pr || '',
+    head_sha: hand.head_sha || '',
+    tests_pass: true,
+    docs: pages,
+    undocumented: Array.isArray(docsDone.undocumented) ? docsDone.undocumented : [],
+    notes: [`provenance recorded for ${done.length} part(s) in the project's provenance log`].concat(result.notes),
+  },
+  next: 'ship it without rebuilding: /engineering-practices:deliver-package { wp: "<the package>", prior: <this result> }; with no work package, /engineering-practices:land-pr { branch: "<handoff.branch>" }',
+})
 })(RUN.agent, RUN.phase, RUN.log)]); return RUN.finish(RUN_OUT)

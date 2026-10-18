@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 export const meta = {
   name: 'sound-pass',
-  description: 'Create or refresh a batch of sound cues end to end: plan against the event list and cue contract, make each cue in parallel (separate files, no shared edits), integrate all contract and provenance lines in one edit, mix-check, review, and update docs. Use for any set of new or replaced sounds. args: { cues: [{ name: "ui_button_confirm", brief: "what it must tell the player and how it should feel" }, ...], scope?: "feature or level name for docs" }',
+  description: 'Create or refresh a batch of sound cues end to end: plan against the event list and cue contract, make each cue in parallel (separate files, no shared edits), integrate all contract and provenance lines in one edit, mix-check, review, update docs, then push it as a handoff for engineering-practices deliver-package or land-pr. Use for any set of new or replaced sounds. args: { cues: [{ name: "ui_button_confirm", brief: "what it must tell the player and how it should feel" }, ...], scope?: "feature or level name for docs" }',
   phases: [
     { title: 'Plan', detail: 'check names, purpose, priority, variations; list doc kinds affected' },
     { title: 'Make', detail: 'one agent per cue: create sound, variations, source, provenance line' },
     { title: 'Integrate', detail: 'one agent applies all cue contract, provenance and credits lines' },
     { title: 'Check', detail: 'mix, loudness, budget and provenance review; fix loop' },
     { title: 'Docs', detail: 'update the planned Diataxis pages, then check one kind per page' },
+    { title: 'Handoff', detail: 'commit and push the pass, run the project checks, return a handoff for engineering-practices deliver-package or land-pr' },
   ],
 }
 
@@ -219,7 +220,7 @@ if (review && review.blockers && review.blockers.length) {
 phase('Docs')
 const docsDone = await agent(
   `You are the sound-designer documenting ${scope}. Planned doc kinds: ${JSON.stringify(plan.doc_kinds)}. Cues: ${ok.map(m => m.name).join(', ')}.\n${DOCS_FRAGMENT}\nThen commit sounds, sources, shared-file edits and docs together with a Conventional Commit (e.g. "feat(audio): add settings menu sounds").`,
-  { phase: 'Docs', label: 'docs-do' },
+  { schema: { type: 'object', properties: { pages: { type: 'array', items: { type: 'string' } }, undocumented: { type: 'array', items: { type: 'string' } } }, required: ['pages'] }, phase: 'Docs', label: 'docs-do' },
 )
 const DOCREV = { type: 'object', properties: { problems: { type: 'array', items: { type: 'string' } } }, required: ['problems'] }
 const docsCheck = docsDone ? await agent(
@@ -229,7 +230,7 @@ const docsCheck = docsDone ? await agent(
 
 const docsProblems = docsCheck ? (docsCheck.problems || []) : ['docs check did not run or failed; docs unverified']
 const incomplete = !docsDone || docsProblems.length > 0 || failed.length > 0
-return {
+const result = {
   status: incomplete ? 'incomplete' : (unverified ? 'done-unverified' : 'done'),
   made: ok.map(m => m.name),
   failed,
@@ -237,4 +238,33 @@ return {
   docs: docsDone ? 'updated' : 'docs agent failed; docs not updated',
   docs_problems: docsProblems,
 }
+if (incomplete) return result
+
+// The handoff is what engineering-practices deliver-package takes as
+// prior, so the sound pass ships without being made again.
+phase('Handoff')
+const HANDOFF = { type: 'object', properties: { branch: { type: 'string' }, pr: { type: 'string' }, head_sha: { type: 'string' }, tests_pass: { type: 'boolean' }, problem: { type: 'string' } }, required: ['branch', 'tests_pass'] }
+const pages = Array.isArray(docsDone.pages) ? docsDone.pages : []
+const hand = await agent(
+  `Hand off the sound pass for ${scope} (cues: ${ok.map(m => m.name).join(', ')}). If you are on the default branch, cut a Conventional branch (feat/<slug>) from the latest remote default branch; otherwise stay on the current feature branch. Commit everything this run wrote that is not yet committed (the cue files and their sources, the cue contract, provenance log and credits file edits, the audio-system configuration, and the docs pages ${pages.join(', ') || 'as written'}) as Conventional Commits, and push. Run the project checks that apply (tests, asset or audio validator, docs and link checks the project profile names) on the pushed head. Do not open, mark ready or merge a PR: the engineering-practices workflow named in the result does that. Follow the engineering-practices git-workflow skill. Return the branch, any open PR, the head commit SHA, whether the checks pass on that head, and the problem if not.`,
+  { schema: HANDOFF, phase: 'Handoff', label: 'handoff' },
+)
+if (!hand || !hand.branch) return { status: 'blocked', stage: 'handoff', open: [hand && hand.problem ? hand.problem : 'handoff step returned nothing; the pass may be uncommitted or unpushed'], made: ok.map(m => m.name), failed }
+if (!hand.tests_pass) return { status: 'blocked', stage: 'handoff', open: [`project checks fail on ${hand.branch}${hand.head_sha ? ' at ' + hand.head_sha : ''}: ${hand.problem || 'no details'}`], made: ok.map(m => m.name), failed }
+// Licensed or attributed sources are the pass's non-original items.
+const nonOriginal = ok.filter(m => /licen/i.test(m.source || '') || (m.credits_lines || []).length).map(m => `${m.name}: ${m.source}`)
+return Object.assign(result, {
+  handoff: {
+    from: 'sound-designer:sound-pass',
+    branch: hand.branch,
+    pr: hand.pr || '',
+    head_sha: hand.head_sha || '',
+    tests_pass: true,
+    docs: pages,
+    undocumented: Array.isArray(docsDone.undocumented) ? docsDone.undocumented : [],
+    non_original: nonOriginal,
+    notes: [`provenance recorded for ${ok.length} cue(s) in the project's provenance log`].concat(unverified ? ['a reviewer agent failed; the sounds are unverified'] : []),
+  },
+  next: 'ship it without rebuilding: /engineering-practices:deliver-package { wp: "<the package>", prior: <this result> }; with no work package, /engineering-practices:land-pr { branch: "<handoff.branch>" }',
+})
 })(RUN.agent, RUN.phase, RUN.log)]); return RUN.finish(RUN_OUT)
