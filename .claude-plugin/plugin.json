@@ -1,14 +1,21 @@
 {
   "name": "sound-designer",
   "version": "0.1.0",
-  "description": "Sound designer: creates original sound effects, music and ambience, and integrates them through a cue system with clean mixing.",
+  "description": "Sound designer role: creates original sound effects, music and ambience by synthesis, recording and layering; builds adaptive audio and implements it as named cues; mixes to measured loudness targets within format and memory budgets; and records the provenance and licence of every sound.",
   "author": {
     "name": "opsroller"
   },
   "repository": "https://github.com/opsroller/sound-designer",
-  "license": "MIT",
+  "license": "GPL-2.0-or-later",
   "keywords": [
     "role",
-    "job-function"
+    "job-function",
+    "sound-design",
+    "game-audio",
+    "music",
+    "adaptive-audio",
+    "mixing",
+    "loudness",
+    "provenance"
   ]
 }
