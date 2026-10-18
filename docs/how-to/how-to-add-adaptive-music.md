@@ -24,8 +24,16 @@ piece with the `adaptive-music` workflow.
 5. Read the result. On `blocked` at `compose`, rerun after fixing the
    listed parts; on `blocked` at `check`, the open items name the
    transitions or layer combinations that fail. On `incomplete`, the
-   music works but the docs need the fixes listed in `docs_problems`.
-6. Listen to a long session yourself: repetition fatigue only shows over
+   music works but the docs need the fixes listed in `docs_problems`. On
+   `blocked` at `handoff`, the push or the project checks failed on the
+   branch named in `open`. On `done`, the piece is pushed on a feature
+   branch and the result carries a `handoff`.
+6. Ship it without composing it again. For a work package, pass the whole
+   result as `prior`:
+   `/engineering-practices:deliver-package { wp: "<the package>", prior: <the result> }`.
+   With no work package, land the branch:
+   `/engineering-practices:land-pr { branch: "<handoff.branch>" }`.
+7. Listen to a long session yourself: repetition fatigue only shows over
    time.
 
 See the [adaptive-music reference](../reference/workflow-adaptive-music.md)
