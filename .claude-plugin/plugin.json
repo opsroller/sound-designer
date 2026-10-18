@@ -1,0 +1,14 @@
+{
+  "name": "sound-designer",
+  "version": "0.1.0",
+  "description": "Sound designer: creates original sound effects, music and ambience, and integrates them through a cue system with clean mixing.",
+  "author": {
+    "name": "opsroller"
+  },
+  "repository": "https://github.com/opsroller/sound-designer",
+  "license": "MIT",
+  "keywords": [
+    "role",
+    "job-function"
+  ]
+}
