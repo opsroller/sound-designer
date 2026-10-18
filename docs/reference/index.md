@@ -37,7 +37,7 @@ Integration and delivery:
 | Field | Value |
 |---|---|
 | `name` | `sound-designer` |
-| `version` | `0.1.0` |
+| `version` | `0.2.0` |
 | `description` | One-sentence summary of the role |
 | `author.name` | `opsroller` |
 | `repository` | `https://github.com/opsroller/sound-designer` |

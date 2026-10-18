@@ -27,3 +27,13 @@
 - `incomplete` is returned when the docs agent failed or the docs check found problems.
 - Results from parallel agents are matched to their inputs by position, not by the name an agent echoes back.
 - Usage text is returned when required arguments are missing.
+
+## Run modes
+
+Run modes v1. Besides its own args, the workflow takes the optional `run` arg defined in the engineering-practices
+[workflow run modes reference](https://github.com/opsroller/engineering-practices/blob/main/docs/reference/workflow-run-modes.md):
+`run: { mode: "inline" }` runs every phase in the calling session with no subagents, `run.only` runs chosen phases or steps,
+and `run.from` with `run.results` resumes a stopped run. Without `run`, the workflow and its outputs are as above.
+See [how to run a workflow inline](https://github.com/opsroller/engineering-practices/blob/main/docs/how-to/how-to-run-a-workflow-inline.md).
+
+Step labels, for `run.only` and `run.results`: `plan`, `part:<name>` (one per part), `implement`, `review`, `fix-<round>`, `re-review-<round>`, `docs-do`, `docs-check`.
