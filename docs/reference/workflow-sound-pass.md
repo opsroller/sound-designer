@@ -7,7 +7,7 @@
 | File | [`workflows/sound-pass.js`](../../workflows/sound-pass.js) |
 | Command | `/sound-designer:sound-pass` |
 | Arguments | `cues` (required): array of `{ name, brief }`. `scope` (optional): feature or level name used in docs. |
-| Returns | `status` (`done`, `done-unverified`, `blocked`), `made`, `failed`, `review_notes`, `docs`, `docs_problems`; when blocked: `stage` and `problems` or `open`. |
+| Returns | `status` (`done`, `done-unverified`, `incomplete`, `blocked`), `made`, `failed`, `review_notes`, `docs`, `docs_problems`; when blocked: `stage` and `problems` or `open`. |
 
 ## Phases
 
@@ -24,4 +24,6 @@
 - Parallel agents write only to their own output folder; shared files (cue contract, provenance log, credits) are edited by one agent in one edit.
 - A failed agent result is never treated as success: missing plans stop the run; failed reviewers mark the result unverified.
 - Blockers still open after two fix rounds return `status: "blocked"` with the open items; nothing further is committed.
+- `incomplete` is returned when the docs agent failed, the docs check found problems, or any cue maker failed.
+- Results from parallel agents are matched to their inputs by position, not by the name an agent echoes back.
 - Usage text is returned when required arguments are missing.

@@ -26,6 +26,9 @@ This guide shows you how to create several cues at once with the
      (unclear purpose, name clashes) and run again.
    - `status: "blocked"` with `stage: "check"`: the open blockers are
      listed; fix them or run again after deciding with the team.
+   - `status: "incomplete"`: some cues in `failed` were not made, or the
+     docs were not updated cleanly (see `docs_problems`); run again for the
+     failed cues or fix the docs.
    - `status: "done-unverified"`: a reviewer agent failed; listen to the
      cues yourself or run [How to review the mix before release](how-to-review-the-mix-before-release.md).
 5. If a cue name is already called by code under a different name, agree

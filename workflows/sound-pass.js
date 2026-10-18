@@ -81,8 +81,9 @@ const made = await pipeline(plan.cues, c => agent(
   'Do NOT edit the shared cue contract, provenance log or credits file: return the exact lines to add instead (contract_line in the contract\'s format with bus, volume/pitch ranges, voices, priority, spatial; one provenance line per file or layer; credits lines if a licence requires attribution). Report a level measurement.',
   { schema: MADE, phase: 'Make', label: `make:${c.name}` },
 ))
-const ok = made.filter(Boolean)
-const failed = plan.cues.filter(c => !ok.some(m => m.name === c.name)).map(c => c.name)
+// Key results by index: made[i] belongs to plan.cues[i], whatever name the agent echoed.
+const ok = made.map((m, i) => (m ? Object.assign({}, m, { name: plan.cues[i].name }) : null)).filter(Boolean)
+const failed = plan.cues.filter((c, i) => !made[i]).map(c => c.name)
 if (!ok.length) return { status: 'blocked', stage: 'make', problems: ['every cue maker failed'], failed }
 
 // ---------- Integrate (single writer) ----------
@@ -134,11 +135,13 @@ const docsCheck = docsDone ? await agent(
   { schema: DOCREV, phase: 'Docs', label: 'docs-check' },
 ) : null
 
+const docsProblems = docsCheck ? (docsCheck.problems || []) : ['docs check did not run or failed; docs unverified']
+const incomplete = !docsDone || docsProblems.length > 0 || failed.length > 0
 return {
-  status: unverified ? 'done-unverified' : 'done',
+  status: incomplete ? 'incomplete' : (unverified ? 'done-unverified' : 'done'),
   made: ok.map(m => m.name),
   failed,
   review_notes: review ? (review.notes || []) : ['review agent failed; sounds unverified'],
   docs: docsDone ? 'updated' : 'docs agent failed; docs not updated',
-  docs_problems: docsCheck ? docsCheck.problems : ['docs check did not run or failed; docs unverified'],
+  docs_problems: docsProblems,
 }

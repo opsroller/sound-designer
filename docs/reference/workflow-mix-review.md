@@ -7,7 +7,7 @@
 | File | [`workflows/mix-review.js`](../../workflows/mix-review.js) |
 | Command | `/sound-designer:mix-review` |
 | Arguments | `target` (optional): loudness target; defaults to the project profile, else console -24 LUFS ±2 LU, mobile -18 LUFS, true peak -1 dBTP. `scope` (optional): build, level or feature. |
-| Returns | `status` (`done`, `done-unverified`, `blocked`), `unverified` areas, `measurements` per area, `notes`, `docs`, `docs_problems`; when blocked: `open` items prefixed by area. |
+| Returns | `status` (`done`, `done-unverified`, `incomplete`, `blocked`), `unverified` areas, `measurements` per area, `notes`, `docs`, `docs_problems`; when blocked: `open` items prefixed by area. |
 
 ## Phases
 
@@ -23,4 +23,6 @@
 - Parallel agents write only to their own output folder; shared files (cue contract, provenance log, credits) are edited by one agent in one edit.
 - A failed agent result is never treated as success: missing plans stop the run; failed reviewers mark the result unverified.
 - Blockers still open after two fix rounds return `status: "blocked"` with the open items; nothing further is committed.
+- `incomplete` is returned when the docs agent failed or the docs check found problems.
+- Results from parallel agents are matched to their inputs by position, not by the name an agent echoes back.
 - Usage text is returned when required arguments are missing.

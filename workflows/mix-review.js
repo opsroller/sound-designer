@@ -55,7 +55,8 @@ const audits = await parallel(areas.map(a => () => agent(
   { schema: FIND, phase: 'Audit', label: `audit:${a.area}` },
 )))
 const unverifiedAreas = areas.filter((a, i) => !audits[i]).map(a => a.area)
-const found = audits.filter(Boolean)
+// Key results by index: audits[i] belongs to areas[i], whatever area name the agent echoed.
+const found = audits.map((f, i) => (f ? Object.assign({}, f, { area: areas[i].area }) : null)).filter(Boolean)
 let blockers = found.flatMap(f => (f.blockers || []).map(b => `[${f.area}] ${b}`))
 
 phase('Fix')
@@ -95,11 +96,13 @@ const docsCheck = docsDone ? await agent(
   { schema: DOCREV, phase: 'Docs', label: 'docs-check' },
 ) : null
 
+const docsProblems = docsCheck ? (docsCheck.problems || []) : ['docs check did not run or failed; docs unverified']
+const incomplete = !docsDone || docsProblems.length > 0
 return {
-  status: unverifiedAreas.length ? 'done-unverified' : 'done',
+  status: incomplete ? 'incomplete' : (unverifiedAreas.length ? 'done-unverified' : 'done'),
   unverified: unverifiedAreas,
   measurements: found.map(f => ({ area: f.area, measurements: f.measurements || [] })),
   notes: found.flatMap(f => f.notes || []),
   docs: docsDone ? 'updated' : 'docs agent failed; docs not updated',
-  docs_problems: docsCheck ? docsCheck.problems : ['docs check did not run or failed; docs unverified'],
+  docs_problems: docsProblems,
 }

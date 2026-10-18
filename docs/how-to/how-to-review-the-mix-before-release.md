@@ -26,6 +26,8 @@ provenance with the `mix-review` workflow and leave a measured record.
    - `blocked`: each open item is prefixed with its area (`[loudness]`,
      `[clarity]`, `[budgets]`, `[provenance]`). Provenance blockers stop
      a release; remove or replace the file.
+   - `incomplete`: fixes are in, but the docs record failed or has
+     problems listed in `docs_problems`; fix the record before release.
    - `done-unverified`: the listed areas were not checked; check them by
      hand before shipping.
 5. If you ship on several platforms, run once per target.

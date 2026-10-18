@@ -72,8 +72,9 @@ const parts = await pipeline(plan.parts, p => agent(
   'Do NOT edit the cue contract, provenance log or credits: return provenance lines and loop points.',
   { schema: PART, phase: 'Compose', label: `part:${p.name}` },
 ))
-const done = parts.filter(Boolean)
-const missing = plan.parts.filter(p => !done.some(d => d.name === p.name)).map(p => p.name)
+// Key results by index: parts[i] belongs to plan.parts[i], whatever name the agent echoed.
+const done = parts.map((d, i) => (d ? Object.assign({}, d, { name: plan.parts[i].name }) : null)).filter(Boolean)
+const missing = plan.parts.filter((p, i) => !parts[i]).map(p => p.name)
 if (missing.length) return { status: 'blocked', stage: 'compose', problems: [`parts not produced: ${missing.join(', ')}`], produced: done.map(d => d.name) }
 
 phase('Implement')
@@ -108,11 +109,13 @@ const docsCheck = docsDone ? await agent(
   { schema: DOCREV, phase: 'Docs', label: 'docs-check' },
 ) : null
 
+const docsProblems = docsCheck ? (docsCheck.problems || []) : ['docs check did not run or failed; docs unverified']
+const incomplete = !docsDone || docsProblems.length > 0
 return {
-  status: unverified ? 'done-unverified' : 'done',
+  status: incomplete ? 'incomplete' : (unverified ? 'done-unverified' : 'done'),
   piece,
   parts: done.map(d => d.name),
   notes: review ? (review.notes || []) : ['review agent failed; music unverified'],
   docs: docsDone ? 'updated' : 'docs agent failed; docs not updated',
-  docs_problems: docsCheck ? docsCheck.problems : ['docs check did not run or failed; docs unverified'],
+  docs_problems: docsProblems,
 }
