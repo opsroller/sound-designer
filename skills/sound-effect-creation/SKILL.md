@@ -1,6 +1,6 @@
 ---
 name: sound-effect-creation
-description: Use when making a sound effect, UI sound or ambience element from scratch: choosing synthesis, recording or layering, building variations, editing and rendering so the sound is readable, original and reproducible.
+description: 'Use when making a sound effect, UI sound or ambience element from scratch: choosing synthesis, recording or layering, building variations, editing and rendering so the sound is readable, original and reproducible.'
 ---
 
 # Sound effect creation
