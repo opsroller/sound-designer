@@ -1,6 +1,6 @@
 ---
 name: sound-provenance
-description: Use whenever a sound, music piece, sample, recording or synth preset enters the project, and before release: applies the base provenance skill to audio, recording origin and licence of every file, checking licences (CC0, CC BY, non-commercial, library EULAs), sound-alike risk and credits.
+description: 'Use whenever a sound, music piece, sample, recording or synth preset enters the project, and before release: applies the base provenance skill to audio, recording origin and licence of every file, checking licences (CC0, CC BY, non-commercial, library EULAs), sound-alike risk and credits.'
 ---
 
 # Sound provenance

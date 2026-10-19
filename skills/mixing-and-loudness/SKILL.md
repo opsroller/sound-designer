@@ -1,6 +1,6 @@
 ---
 name: mixing-and-loudness
-description: Use when balancing the game's audio as a whole: bus structure, priority and ducking, levels by category, loudness measurement against a target (integrated LUFS, true peak, loudness range), mastering, player volume settings and audio accessibility options.
+description: 'Use when balancing the game''s audio as a whole: bus structure, priority and ducking, levels by category, loudness measurement against a target (integrated LUFS, true peak, loudness range), mastering, player volume settings and audio accessibility options.'
 ---
 
 # Mixing and loudness

@@ -1,6 +1,6 @@
 ---
 name: music-and-adaptive-scoring
-description: Use when composing or arranging original music or ambience beds for an interactive project, and when designing how it adapts to play: loops, segments (horizontal re-sequencing), layers (vertical layering), stingers, transitions and runtime processing.
+description: 'Use when composing or arranging original music or ambience beds for an interactive project, and when designing how it adapts to play: loops, segments (horizontal re-sequencing), layers (vertical layering), stingers, transitions and runtime processing.'
 ---
 
 # Music and adaptive scoring

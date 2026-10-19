@@ -1,6 +1,6 @@
 ---
 name: audio-implementation
-description: Use when connecting sounds to the running project: cue naming, the cue contract that code calls, parameters, randomisation, voice limits and priority, buses, spatial settings, and behaviour when a cue is missing.
+description: 'Use when connecting sounds to the running project: cue naming, the cue contract that code calls, parameters, randomisation, voice limits and priority, buses, spatial settings, and behaviour when a cue is missing.'
 ---
 
 # Audio implementation
